@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOD - Add Students</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.3.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #1e62a5;
+            background-image: url('input.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            
+        }
+
+        .sidebar {
+            width: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            color: white;
+            height: 100%;
+            padding-top: 20px;
+            transition: 0.5s;
+            z-index: 1000;
+            overflow-x: hidden;
+        }
+
+        .sidebar.open {
+            width: 250px;
+        }
+
+        .sidebar a {
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .text-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hamburger {
+            cursor: pointer;
+        }
+
+        .hamburger input {
+            display: none;
+        }
+
+        .hamburger svg {
+            height: 3em;
+            transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .line {
+            fill: none;
+            stroke: rgb(8, 8, 8);
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 3;
+            transition: stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
+                        stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .line-top-bottom {
+            stroke-dasharray: 12 63;
+        }
+
+        .hamburger input:checked + svg {
+            transform: rotate(-45deg);
+        }
+
+        .hamburger input:checked + svg .line-top-bottom {
+            stroke-dasharray: 20 300;
+            stroke-dashoffset: -32.42;
+        }
+
+        .details-info {
+            font-size: 12px;
+            font-weight: lighter;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .content {
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .content.open {
+            margin-left: 250px;
+        }
+
+        /* Smooth page transition */
+        .page-transition {
+            opacity: 50;
+            transition: opacity 5s ease-in-out;
+        }
+
+        .page-transition.loaded {
+            opacity: 50;
+        }
+
+        /* Success message styling */
+        #success-message {
+            display: none;
+        }
+
+        /* Green submit button */
+        .btn-custom {
+            background-color: #28a745; /* Green */
+            border-color: #28a745;
+            color: white;
+        }
+
+        .btn-custom:hover {
+            background-color: #218838; /* Darker Green */
+            border-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="hamburger" id="hamburgerToggle" style="cursor: pointer; padding: 10px;">    
+        <i class="fas fa-bars fa-2x"></i>
+    </div>
+    <div class="sidebar" id="sidebar">
+        <div class="text-center py-3 d-flex justify-content-between">
+            <h4>Dashboard</h4>
+            <button class="close-btn" onclick="closeSidebar()">×</button>
+        </div>
+        <a href="mainindex.html"> Dashboard <i class="fa fa-tachometer-alt"></i></a>
+        <a href="filter.html"> Filter <i class="fa fa-filter"></i></a>
+        <a href="hodinput.html"> Add Students <i class="fa fa-user-plus"></i></a>
+        <a href="#"> Faculty Load <i class="fa fa-cogs"></i> </a>
+        <a href="events.html">Events <i class="fa fa-calendar"></i> </a>
+        <hr>
+        <a href="#"><i class="fa fa-sign-out-alt"></i> Sign out</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container content page-transition" id="main-content">
+        <div class="text-center">
+            <h2 class="mb-4">Add Students for Attendance</h2>
+        </div>
+        
+        <!-- Success Message -->
+        <div id="success-message" class="alert alert-success" role="alert">
+            Data submitted successfully!
+        </div>
+
+        <form action="/add-students" method="POST" enctype="multipart/form-data" id="studentForm" novalidate>
+            <!-- Manual Student Entry -->
+            <h4>Manual Entry</h4>
+            <div id="student-list">
+                <!-- First row without removable "X" -->
+                <div class="row mb-3 align-items-center">
+                    <div class="col">
+                        <input type="text" class="form-control" name="name[]" placeholder="Name" required>
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" name="degree[]" placeholder="Degree" required>
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" name="department[]" placeholder="Department" required>
+                    </div>
+                    <div class="col">
+                        <select class="form-select" name="year[]" required>
+                            <option value="" disabled selected>Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <input type="text" class="form-control" name="section[]" placeholder="Section" required>
+                    </div>
+                    <div class="col">
+                        <select class="form-select" name="gender[]" required>
+                            <option value="" disabled selected>Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-remove disabled" disabled>X</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add More Button -->
+            <div class="mb-3 text-center">
+                <button type="button" class="btn btn-secondary" id="add-student-btn">Add More</button>
+            </div>
+
+            <!-- Excel Upload Section -->
+            <h4>Upload Excel File</h4>
+            <div class="mb-3">
+                <label for="excelUpload" class="form-label">Upload Excel File (.csv, .xlsx)</label>
+                <input type="file" class="form-control" id="excelUpload" name="excel_file" accept=".csv, .xlsx" required>
+                <small class="text-muted">Format: Name, Degree, Department, Year, Section, Gender</small>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-custom">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Toggle sidebar on hamburger checkbox check/uncheck
+        document.getElementById("hamburgerToggle").addEventListener("click", function() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("main-content");
+            sidebar.classList.toggle("open");
+            content.classList.toggle("open");
+        });
+
+        // Function to close sidebar when clicking on the close button
+        function closeSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            var content = document.getElementById("main-content");
+            sidebar.classList.remove("open");
+            content.classList.remove("open");
+        }
+
+        const addStudentBtn = document.getElementById('add-student-btn');
+        const studentList = document.getElementById('student-list');
+        const form = document.getElementById('studentForm');
+        const successMessage = document.getElementById('success-message');
+
+        // Add More Students
+        addStudentBtn.addEventListener('click', () => {
+            const newRow = document.createElement('div');
+            newRow.classList.add('row', 'mb-3', 'align-items-center');
+
+            newRow.innerHTML = `
+                <div class="col">
+                    <input type="text" class="form-control" name="name[]" placeholder="Name" required>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" name="degree[]" placeholder="Degree" required>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" name="department[]" placeholder="Department" required>
+                </div>
+                <div class="col">
+                    <select class="form-select" name="year[]" required>
+                        <option value="" disabled selected>Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" name="section[]" placeholder="Section" required>
+                </div>
+                <div class="col">
+                    <select class="form-select" name="gender[]" required>
+                        <option value="" disabled selected>Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-remove" onclick="removeStudent(this)">X</button>
+                </div>
+            `;
+
+            studentList.appendChild(newRow);
+        });
+
+        // Remove Student Entry
+        function removeStudent(button) {
+            const studentRow = button.closest('.row');
+            studentRow.remove();
+        }
+
+        // Show Success Message on Form Submit
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Display success message
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+
+            // Optionally reset the form or do other operations
+            form.reset();
+        });
+    </script>
+</body>
+</html>

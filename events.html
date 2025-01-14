@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App with Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .note-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .note-input,
+        .note-date{
+            width: 96%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        .note-frequency {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        .btn-add {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-add:hover {
+            background-color: #45a049;
+        }
+        .note-list {
+            margin-top: 20px;
+        }
+        .note-item {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+        .btn-delete:hover {
+            background-color: #e53935;
+        }
+        .note-date {
+            background-color: #f0f8ff;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="note-container">
+        <h1>Notes with Reminders</h1>
+        <textarea id="noteInput" class="note-input" rows="4" placeholder="Write your note here..."></textarea>
+        <input type="date" id="noteDate" class="note-date" required />
+        <select id="noteFrequency" class="note-frequency" required>
+            <option value="" disabled selected>Select Reminder Frequency</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom (in days)</option>
+        </select>
+        <input type="number" id="customDays" class="note-frequency" placeholder="Custom Days (if selected)" min="1" style="display:none;" />
+        <button class="btn-add" onclick="addNote()">Add Note</button>
+        <div class="note-list" id="noteList"></div>
+    </div>
+
+    <script>
+        // Function to add a new note
+        function addNote() {
+            const noteText = document.getElementById('noteInput').value;
+            const noteDate = document.getElementById('noteDate').value;
+            const noteFrequency = document.getElementById('noteFrequency').value;
+            const customDays = document.getElementById('customDays').value;
+
+            if (noteText.trim() === '') {
+                alert("Please write something to add a note.");
+                return;
+            }
+
+            if (!noteDate) {
+                alert("Please select a reminder date.");
+                return;
+            }
+
+            // Validate custom days if custom frequency is selected
+            if (noteFrequency === 'custom' && !customDays) {
+                alert("Please enter custom days for the reminder.");
+                return;
+            }
+
+            // Create a new note item
+            const noteItem = document.createElement('div');
+            noteItem.classList.add('note-item');
+            noteItem.innerHTML = `
+                <p><strong>Note:</strong> ${noteText}</p>
+                <p><strong>Reminder Date:</strong> ${new Date(noteDate).toLocaleDateString()}</p>
+                <p><strong>Frequency:</strong> ${noteFrequency === 'custom' ? customDays + ' days' : noteFrequency}</p>
+                <button class="btn-delete" onclick="deleteNote(this)">Delete</button>
+            `;
+
+            // Add the new note item to the note list
+            document.getElementById('noteList').appendChild(noteItem);
+
+            // Set up the alarm
+            setReminder(noteDate, noteFrequency, customDays);
+
+            // Clear the input fields
+            document.getElementById('noteInput').value = '';
+            document.getElementById('noteDate').value = '';
+            document.getElementById('noteFrequency').value = '';
+            document.getElementById('customDays').style.display = 'none';
+        }
+
+        // Function to delete a note
+        function deleteNote(button) {
+            const noteItem = button.parentElement;
+            noteItem.remove();
+        }
+
+        // Function to show the custom days input when 'custom' frequency is selected
+        document.getElementById('noteFrequency').addEventListener('change', function () {
+            if (this.value === 'custom') {
+                document.getElementById('customDays').style.display = 'inline-block';
+            } else {
+                document.getElementById('customDays').style.display = 'none';
+            }
+        });
+
+        // Function to set the reminder alarm based on the selected frequency
+        function setReminder(noteDate, frequency, customDays) {
+            const reminderTime = new Date(noteDate).getTime();
+            let alarmTime;
+
+            if (frequency === 'daily') {
+                alarmTime = reminderTime + 24 * 60 * 60 * 1000; // 24 hours later
+            } else if (frequency === 'weekly') {
+                alarmTime = reminderTime + 7 * 24 * 60 * 60 * 1000; // 1 week later
+            } else if (frequency === 'monthly') {
+                alarmTime = reminderTime + 30 * 24 * 60 * 60 * 1000; // 1 month later
+            } else if (frequency === 'custom' && customDays) {
+                alarmTime = reminderTime + customDays * 24 * 60 * 60 * 1000; // Custom days later
+            }
+
+            // Set an alarm using setTimeout (this could be replaced with more advanced notification systems)
+            setTimeout(function () {
+                alert("Reminder: " + noteText); // Alert user with note text
+            }, alarmTime - Date.now());
+        }
+    </script>
+
+</body>
+</html>
